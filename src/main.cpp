@@ -28,7 +28,6 @@ static uint32_t vao;
 static uint32_t ebo;
 static uint32_t shaderProgram;
 static uint32_t textures[2];
-static glm::mat4 transform;
 
 static uint32_t LoadShader(const std::string& path, GLenum shaderType)
 {
@@ -99,17 +98,21 @@ static void Init()
     textures[1] = LoadTexture("assets/awesomeface.png", 1);
     glUniform1i(glGetUniformLocation(shaderProgram, "uTexture0"), 0);
     glUniform1i(glGetUniformLocation(shaderProgram, "uTexture1"), 1);
-
-    transform = glm::mat4(1.0f);
 }
 
 static void Draw(float delta)
 {
     glUseProgram(shaderProgram);
     glBindVertexArray(vao);
+
+    glm::mat4 model = glm::rotate(glm::mat4(1.0f), glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+    glm::mat4 mvp = projection * view * model;
+
+    // transform = glm::rotate(transform, glm::radians(delta * 10), glm::vec3(0.0, 0.0, 1.0));
     uint32_t transformLoc = glGetUniformLocation(shaderProgram, "uTransform");
-    transform = glm::rotate(transform, glm::radians(delta * 10), glm::vec3(0.0, 0.0, 1.0));
-    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
+    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(mvp));
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 
