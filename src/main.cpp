@@ -87,6 +87,10 @@ static uint32_t shaderProgram;
 static uint32_t textures[2];
 static glm::mat4 model;
 
+static glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+static glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+static glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
 static uint32_t LoadShader(const std::string& path, GLenum shaderType)
 {
     std::ifstream file(path);
@@ -162,14 +166,33 @@ static void Init()
     glEnable(GL_DEPTH_TEST);
 }
 
+static void Update(const Window& window, float delta)
+{
+    const float speed = 100.0f;
+    if (window.IsKeyDown(SDLK_W))
+    {
+        cameraPos += speed * cameraFront * delta;
+    }
+    if (window.IsKeyDown(SDLK_S))
+    {
+        cameraPos -= speed * cameraFront * delta;
+    }
+    if (window.IsKeyDown(SDLK_A))
+    {
+        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * speed * delta;
+    }
+    if (window.IsKeyDown(SDLK_D))
+    {
+        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * speed * delta;
+    }
+}
+
 static void Draw(float delta)
 {
     glUseProgram(shaderProgram);
     glBindVertexArray(vao);
 
-    // glm::mat4 model = glm::rotate(glm::mat4(1.0f), glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    // model = glm::rotate(model, glm::radians(50.0f) * delta, glm::vec3(0.5f, 1.0f, 0.0f));
-    glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));
+    glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1280.0f / 720.0f, 0.1f, 100.0f);
 
     uint32_t transformLoc = glGetUniformLocation(shaderProgram, "uTransform");
@@ -228,6 +251,7 @@ int main(int argc, char **argv)
             fps = 0;
         }
         window.PollEvents();
+        Update(window, delta);
         int width = window.GetWidth();
         int height = window.GetHeight();
         glViewport(0, 0, width, height);

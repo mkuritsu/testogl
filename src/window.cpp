@@ -39,10 +39,15 @@ void Window::PollEvents()
     SDL_Event event;
     while (SDL_PollEvent(&event))
     {
+        m_DownKeys.clear();
         if (event.type == SDL_EVENT_QUIT)
         {
             m_ShouldQuit = true;
             break;
+        }
+        else if (event.type == SDL_EVENT_KEY_DOWN)
+        {
+            m_DownKeys.insert(event.key.key);
         }
     }
 }
@@ -75,4 +80,9 @@ int Window::GetHeight() const
     int width, height;
     SDL_GetWindowSize(m_Window, &width, &height);
     return height;
+}
+
+bool Window::IsKeyDown(SDL_Keycode key) const
+{
+    return m_DownKeys.count(key) > 0;
 }
