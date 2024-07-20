@@ -24,6 +24,8 @@ public:
 
     int GetHeight() const;
 
+    float GetDelta() const;
+
 private:
     std::string m_Title;
     int m_Width;

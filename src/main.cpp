@@ -5,6 +5,9 @@
 #include <fstream>
 #include <sstream>
 #include <stb_image.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 float vertices[] = {
     // positions          // colors           // texture coords
@@ -14,17 +17,18 @@ float vertices[] = {
     -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
 };
 
-unsigned int indices[] = {
-        0, 1, 3, // first triangle
-        1, 2, 3  // second triangle
-    };
+unsigned int indices[] = 
+{
+    0, 1, 3,
+    1, 2, 3
+};
 
 static uint32_t vbo;
 static uint32_t vao;
 static uint32_t ebo;
 static uint32_t shaderProgram;
-
 static uint32_t textures[2];
+static glm::mat4 transform;
 
 static uint32_t LoadShader(const std::string& path, GLenum shaderType)
 {
@@ -95,12 +99,17 @@ static void Init()
     textures[1] = LoadTexture("assets/awesomeface.png", 1);
     glUniform1i(glGetUniformLocation(shaderProgram, "uTexture0"), 0);
     glUniform1i(glGetUniformLocation(shaderProgram, "uTexture1"), 1);
+
+    transform = glm::mat4(1.0f);
 }
 
-static void Draw()
+static void Draw(float delta)
 {
     glUseProgram(shaderProgram);
     glBindVertexArray(vao);
+    uint32_t transformLoc = glGetUniformLocation(shaderProgram, "uTransform");
+    transform = glm::rotate(transform, glm::radians(delta * 10), glm::vec3(0.0, 0.0, 1.0));
+    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 
@@ -134,6 +143,7 @@ int main(int argc, char **argv)
     {
         uint64_t now = SDL_GetTicks();
         uint64_t frametime = now - lastFrame;
+        float delta = frametime / 1000.0f;
         lastFrame = now;
         fps++;
         ticks += frametime;
@@ -148,7 +158,7 @@ int main(int argc, char **argv)
         int height = window.GetHeight();
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT);
-        Draw();
+        Draw(delta);
         window.SwapBuffers();
     }
     Unload();
