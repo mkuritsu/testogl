@@ -4,6 +4,13 @@
 #include <SDL3/SDL.h>
 #include <unordered_set>
 
+struct MousePos
+{
+    float x, y;
+};
+
+typedef MousePos WheelMov;
+
 class Window
 {
 public:
@@ -17,6 +24,8 @@ public:
 
     bool ShouldQuit() const;
 
+    void Quit();
+
     void Destroy() const;
 
     void SwapBuffers() const;
@@ -29,11 +38,16 @@ public:
 
     bool IsKeyDown(SDL_Keycode key) const;
 
+    MousePos GetMouse() const;
+
+    MousePos GetWheelMov() const;
+
 private:
     std::string m_Title;
     int m_Width;
     int m_Height;
     bool m_ShouldQuit = false;
+    WheelMov m_WheelMov;
     SDL_Window* m_Window = nullptr;
     std::unordered_set<SDL_Keycode> m_DownKeys;
 };

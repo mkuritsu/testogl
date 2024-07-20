@@ -4,6 +4,7 @@ project(test-ogl)
 
 set(SDL_SHARED OFF)
 set(SDL_STATIC ON)
+set(CMAKE_CXX_STANDARD 20)
 
 add_subdirectory("thirdparty/sdl")
 add_subdirectory("thirdparty/glad")

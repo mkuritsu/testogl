@@ -8,6 +8,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <cmath>
+#include <algorithm>
 
 // float vertices[] = {
 //     // positions          // colors           // texture coords
@@ -91,6 +93,13 @@ static glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 static glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 static glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
+static float yaw = -90.0f;
+static float pitch = 0.0f;
+
+static glm::vec3 direction;
+
+static float fov = 45.0f;
+
 static uint32_t LoadShader(const std::string& path, GLenum shaderType)
 {
     std::ifstream file(path);
@@ -164,27 +173,53 @@ static void Init()
     model = glm::rotate(glm::mat4(1.0f), glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
     glEnable(GL_DEPTH_TEST);
+
+    // SDL_CaptureMouse(SDL_TRUE);
+    SDL_SetRelativeMouseMode(SDL_TRUE);
+    SDL_HideCursor();
 }
 
-static void Update(const Window& window, float delta)
+static void Update(Window& window, float delta)
 {
-    const float speed = 100.0f;
-    if (window.IsKeyDown(SDLK_W))
+    float speed = 10.0f;
+    if (window.IsKeyDown(SDL_SCANCODE_LSHIFT))
+    {
+        speed *= 4;
+    }
+    if (window.IsKeyDown(SDL_SCANCODE_W))
     {
         cameraPos += speed * cameraFront * delta;
     }
-    if (window.IsKeyDown(SDLK_S))
+    if (window.IsKeyDown(SDL_SCANCODE_S))
     {
         cameraPos -= speed * cameraFront * delta;
     }
-    if (window.IsKeyDown(SDLK_A))
+    if (window.IsKeyDown(SDL_SCANCODE_A))
     {
         cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * speed * delta;
     }
-    if (window.IsKeyDown(SDLK_D))
+    if (window.IsKeyDown(SDL_SCANCODE_D))
     {
         cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * speed * delta;
     }
+    if (window.IsKeyDown(SDL_SCANCODE_ESCAPE))
+    {
+        window.Quit();
+    }
+
+    MousePos mousePos = window.GetMouse();
+    const float sensitivity = 0.05f;
+    float mouseX = mousePos.x * sensitivity;
+    float mouseY = mousePos.y * sensitivity;
+    yaw += mouseX;
+    pitch = std::clamp(pitch - mouseY, -89.0f, 89.0f);
+    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    direction.y = sin(glm::radians(pitch));
+    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    cameraFront = glm::normalize(direction);
+
+    WheelMov wheel = window.GetWheelMov();
+    fov -= wheel.y;
 }
 
 static void Draw(float delta)
@@ -193,7 +228,7 @@ static void Draw(float delta)
     glBindVertexArray(vao);
 
     glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f), 1280.0f / 720.0f, 0.1f, 100.0f);
+    glm::mat4 projection = glm::perspective(glm::radians(fov), 1280.0f / 720.0f, 0.1f, 100.0f);
 
     uint32_t transformLoc = glGetUniformLocation(shaderProgram, "uTransform");
     for (int i = 0; i < 10; i++)

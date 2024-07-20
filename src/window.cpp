@@ -37,9 +37,11 @@ void Window::Init()
 void Window::PollEvents()
 {
     SDL_Event event;
+    m_DownKeys.clear();
+    m_WheelMov.x = 0;
+    m_WheelMov.y = 0;
     while (SDL_PollEvent(&event))
     {
-        m_DownKeys.clear();
         if (event.type == SDL_EVENT_QUIT)
         {
             m_ShouldQuit = true;
@@ -47,14 +49,29 @@ void Window::PollEvents()
         }
         else if (event.type == SDL_EVENT_KEY_DOWN)
         {
-            m_DownKeys.insert(event.key.key);
+            m_DownKeys.insert(event.key.scancode);
+        }
+        else if (event.type == SDL_EVENT_MOUSE_WHEEL)
+        {
+            m_WheelMov.x = event.wheel.x;
+            m_WheelMov.y = event.wheel.y;
         }
     }
+    // if (m_DownKeys.size() > 0)
+    // {
+
+    //     std::cout << "PRESSED!" << std::endl;
+    // }
 }
 
 bool Window::ShouldQuit() const
 {
     return m_ShouldQuit;
+}
+
+void Window::Quit()
+{
+    m_ShouldQuit = true;
 }
 
 void Window::Destroy() const
@@ -84,5 +101,20 @@ int Window::GetHeight() const
 
 bool Window::IsKeyDown(SDL_Keycode key) const
 {
-    return m_DownKeys.count(key) > 0;
+    const uint8_t* keys = SDL_GetKeyboardState(NULL);
+    // std::cout << keys << std::endl;
+    return keys[key];
+    // return m_DownKeys.count(key) > 0;
+}
+
+MousePos Window::GetMouse() const
+{
+    MousePos pos;
+    SDL_GetRelativeMouseState(&pos.x, &pos.y);
+    return pos;
+}
+
+MousePos Window::GetWheelMov() const
+{
+    return m_WheelMov;
 }
