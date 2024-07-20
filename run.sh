@@ -1,2 +1,2 @@
-cmake --build .\build\
-.\build\Debug\test-ogl.exe
+cmake --build ./build
+./build/test-ogl
