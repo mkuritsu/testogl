@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.5)
 project(test-ogl)
 
 set(SDL_SHARED OFF)
+set(SDL_STATIC ON)
 
 add_subdirectory("thirdparty/sdl")
 add_subdirectory("thirdparty/glad")
