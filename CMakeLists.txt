@@ -15,6 +15,12 @@ set(SOURCES
     "src/main.cpp"
     "src/window.cpp"
     "src/camera.cpp"
+    "src/opengl/gl_buffer.cpp"
+    "src/opengl/gl_program.cpp"
+    "src/opengl/gl_shader.cpp"
+    "src/opengl/gl_vertex_array.cpp"
+    "src/opengl/layout_element.cpp"
+    "src/opengl/vertex_layout.cpp"
 )
 
 add_executable(${CMAKE_PROJECT_NAME} ${SOURCES})

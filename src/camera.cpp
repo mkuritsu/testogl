@@ -9,7 +9,7 @@ void Camera::Move(float x, float y, float z)
     
 void Camera::Move(const glm::vec3 vec)
 {
-    m_Position += vec;
+    m_Position = vec;
 }
 
 float Camera::GetYaw() const
@@ -45,4 +45,19 @@ void Camera::SetFov(float fov)
 glm::mat4 Camera::GetViewMatrix() const
 {
     return glm::lookAt(m_Position, m_Position + m_Front, m_Up);
+}
+
+glm::vec3 Camera::GetFront() const
+{
+    return m_Front;
+}
+
+glm::vec3 Camera::GetUp() const
+{
+    return m_Up;
+}
+
+glm::vec3 Camera::GetPosition() const
+{
+    return m_Position;
 }

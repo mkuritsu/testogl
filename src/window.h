@@ -42,6 +42,10 @@ public:
 
     MousePos GetWheelMov() const;
 
+    float GetTime() const;
+
+    void CaptureCursor() const;
+
 private:
     std::string m_Title;
     int m_Width;
@@ -49,5 +53,4 @@ private:
     bool m_ShouldQuit = false;
     WheelMov m_WheelMov;
     SDL_Window* m_Window = nullptr;
-    std::unordered_set<SDL_Keycode> m_DownKeys;
 };

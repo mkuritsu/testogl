@@ -118,3 +118,14 @@ MousePos Window::GetWheelMov() const
 {
     return m_WheelMov;
 }
+
+float Window::GetTime() const
+{
+    return SDL_GetTicks() / 1000.0f;
+}
+
+void Window::CaptureCursor() const
+{
+    SDL_SetRelativeMouseMode(SDL_TRUE);
+    SDL_HideCursor();
+}

@@ -22,6 +22,12 @@ public:
 
     glm::mat4 GetViewMatrix() const;
 
+    glm::vec3 GetFront() const;
+
+    glm::vec3 GetUp() const;
+
+    glm::vec3 GetPosition() const;
+
 private:
     glm::vec3 m_Position = glm::vec3(0.0f);
     glm::vec3 m_Front = glm::vec3(0.0f, 0.0f, -1.0f);

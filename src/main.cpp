@@ -10,6 +10,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <cmath>
 #include <algorithm>
+#include "camera.h"
 
 float vertices[] =
 {
@@ -104,18 +105,8 @@ static uint32_t vao;
 static uint32_t ebo;
 static uint32_t shaderProgram;
 static uint32_t textures[2];
-static glm::mat4 model;
 
-static glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-static glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-static glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-
-static float yaw = -90.0f;
-static float pitch = 0.0f;
-
-static glm::vec3 direction;
-
-static float fov = 45.0f;
+static Camera camera;
 
 static uint32_t LoadShader(const std::string& path, GLenum shaderType)
 {
@@ -153,7 +144,7 @@ static uint32_t LoadTexture(const std::string& path, int texSlot)
     return tex;
 }
 
-static void Init()
+static void Init(const Window& window)
 {
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
@@ -185,15 +176,11 @@ static void Init()
     textures[0] = LoadTexture("assets/wall.jpg", 0);
     glUniform1i(glGetUniformLocation(shaderProgram, "uTexture0"), 0);
 
-    model = glm::rotate(glm::mat4(1.0f), glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
-    // glCullFace(GL_FRONT);
 
-    // SDL_CaptureMouse(SDL_TRUE);
-    SDL_SetRelativeMouseMode(SDL_TRUE);
-    SDL_HideCursor();
+    window.CaptureCursor();
+    camera.Move(glm::vec3(0.0f, 0.0f, 3.0f));
 }
 
 static void Update(Window& window, float delta)
@@ -205,37 +192,38 @@ static void Update(Window& window, float delta)
     }
     if (window.IsKeyDown(SDL_SCANCODE_LSHIFT))
     {
-        speed *= 4;
+        speed *= 2;
     }
+    glm::vec3 movement = glm::vec3(0.0f);
     if (window.IsKeyDown(SDL_SCANCODE_W))
     {
-        cameraPos += speed * cameraFront * delta;
+        movement += speed * camera.GetFront() * delta;
     }
     if (window.IsKeyDown(SDL_SCANCODE_S))
     {
-        cameraPos -= speed * cameraFront * delta;
+        movement -= speed * camera.GetFront() * delta;
     }
     if (window.IsKeyDown(SDL_SCANCODE_A))
     {
-        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * speed * delta;
+        movement -= glm::normalize(glm::cross(camera.GetFront(), camera.GetUp())) * speed * delta;
     }
     if (window.IsKeyDown(SDL_SCANCODE_D))
     {
-        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * speed * delta;
+        movement += glm::normalize(glm::cross(camera.GetFront(), camera.GetUp())) * speed * delta;
     }
+    camera.Move(camera.GetPosition() + movement);
 
     MousePos mousePos = window.GetMouse();
     const float sensitivity = 0.05f;
     float mouseX = mousePos.x * sensitivity;
     float mouseY = mousePos.y * sensitivity;
+    float yaw = camera.GetYaw();
+    float pitch = camera.GetPitch();
     yaw += mouseX;
     pitch = std::clamp(pitch - mouseY, -89.0f, 89.0f);
-    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    direction.y = sin(glm::radians(pitch));
-    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    cameraFront = glm::normalize(direction);
+    camera.SetDirection(yaw, pitch);
     WheelMov wheel = window.GetWheelMov();
-    fov -= wheel.y;
+    camera.SetFov(camera.GetFov() - wheel.y);
 }
 
 static void Draw(float delta)
@@ -244,8 +232,8 @@ static void Draw(float delta)
     glBindVertexArray(vao);
 
     glm::mat4 model = glm::mat4(1.0f);
-    glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-    glm::mat4 projection = glm::perspective(glm::radians(fov), 1280.0f / 720.0f, 0.1f, 100.0f);
+    glm::mat4 view = camera.GetViewMatrix();
+    glm::mat4 projection = glm::perspective(glm::radians(camera.GetFov()), 1280.0f / 720.0f, 0.1f, 100.0f);
 
     glm::mat4 mvp = projection * view * model;
     uint32_t transformLoc = glGetUniformLocation(shaderProgram, "uTransform");
@@ -269,7 +257,7 @@ int main(int argc, char **argv)
     {
         window.Init();
     } 
-    catch (std::exception e)
+    catch (std::runtime_error e)
     {
         std::cerr << "EXCEPTION: " << e.what() << std::endl;
         return 1;
@@ -278,7 +266,7 @@ int main(int argc, char **argv)
     uint64_t ticks = 0;
     int32_t fps = 0;
     uint64_t lastFrame = 0;
-    Init();
+    Init(window);
     while (!window.ShouldQuit())
     {
         uint64_t now = SDL_GetTicks();
