@@ -14,6 +14,7 @@ add_subdirectory("thirdparty/glm")
 set(SOURCES 
     "src/main.cpp"
     "src/window.cpp"
+    "src/camera.cpp"
 )
 
 add_executable(${CMAKE_PROJECT_NAME} ${SOURCES})
