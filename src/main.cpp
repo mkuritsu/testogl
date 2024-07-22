@@ -82,7 +82,7 @@ static std::unique_ptr<GLVertexArray> s_LightVAO;
 static std::unique_ptr<GLBuffer> s_LightVBO;
 static std::unique_ptr<GLBuffer> s_LightEBO;
 
-static glm::vec3 s_LightPos = glm::vec3(3.0f, 0.0f, 0.0f);
+static glm::vec3 s_LightPos = glm::vec3(2.0f, -2.0f, 2.0f);
 static glm::vec3 s_LightAmbient = glm::vec3(0.2f, 0.2f, 0.2f);
 static glm::vec3 s_LightDiffuse = glm::vec3(0.5f, 0.5f, 0.5f);
 static glm::vec3 s_LightSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
@@ -150,10 +150,31 @@ static void DrawCube(const glm::vec3& position)
     s_BasicShader->SetMatrix4("uView", view);
     s_BasicShader->SetMatrix4("uProjection", projection);
     s_BasicShader->SetVec3("uViewPos", camera.GetPosition());
-    s_BasicShader->SetVec3("uLight.position", s_LightPos);
-    s_BasicShader->SetVec3("uLight.ambient", s_LightAmbient);
-    s_BasicShader->SetVec3("uLight.diffuse", s_LightDiffuse);
-    s_BasicShader->SetVec3("uLight.specular", s_LightSpecular);
+
+    s_BasicShader->SetVec3("uDirectionLights[0].direction", glm::vec3(0.0f, -2.0f, 0.0f));
+    s_BasicShader->SetVec3("uDirectionLights[0].ambient", s_LightAmbient);
+    s_BasicShader->SetVec3("uDirectionLights[0].diffuse", s_LightDiffuse);
+    s_BasicShader->SetVec3("uDirectionLights[0].specular", s_LightSpecular);
+
+    s_BasicShader->SetVec3("uPointLights[0].position", s_LightPos);
+    s_BasicShader->SetVec3("uPointLights[0].ambient", glm::vec3(0.2f, 0.0f, 0.0f));
+    s_BasicShader->SetVec3("uPointLights[0].diffuse", glm::vec3(0.5f, 0.0f, 0.0f));
+    s_BasicShader->SetVec3("uPointLights[0].specular", glm::vec3(1.0f, 0.0f, 0.0f));
+    s_BasicShader->SetFloat("uPointLights[0].constant", 1.0f);
+    s_BasicShader->SetFloat("uPointLights[0].linear", 0.07f);
+    s_BasicShader->SetFloat("uPointLights[0].quadratic", 0.017f);
+
+    s_BasicShader->SetVec3("uSpotLights[0].position", camera.GetPosition());
+    s_BasicShader->SetVec3("uSpotLights[0].ambient", glm::vec3(0.2f, 0.2f, 0.0f));
+    s_BasicShader->SetVec3("uSpotLights[0].diffuse", glm::vec3(0.5f, 0.5f, 0.0f));
+    s_BasicShader->SetVec3("uSpotLights[0].specular", s_LightSpecular);
+    s_BasicShader->SetFloat("uSpotLights[0].constant", 1.0f);
+    s_BasicShader->SetFloat("uSpotLights[0].linear", 0.07f);
+    s_BasicShader->SetFloat("uSpotLights[0].quadratic", 0.017f);
+    s_BasicShader->SetVec3("uSpotLights[0].direction", camera.GetFront());
+    s_BasicShader->SetFloat("uSpotLights[0].cutOff", glm::cos(glm::radians(2.5f)));
+    s_BasicShader->SetFloat("uSpotLights[0].outerCutOff", glm::cos(glm::radians(10.0f)));
+
     s_BasicShader->SetInt("uMaterial.diffuse", 0);
     s_BasicShader->SetInt("uMaterial.specular", 1);
     s_BasicShader->SetFloat("uMaterial.shininess", s_Shininess);
@@ -164,7 +185,7 @@ static void DrawLight()
 {
     s_LightVAO->Bind();
     s_LightShader->Use();
-    s_LightShader->SetVec3("uLightColor", s_LightSpecular);
+    s_LightShader->SetVec3("uLightColor", glm::vec3(1.0f, 0.0f, 0.0f));
     glm::mat4 model = glm::translate(glm::mat4(1.0f), s_LightPos);
     model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
     glm::mat4 view = camera.GetViewMatrix();
@@ -235,8 +256,13 @@ static void Draw(const Window& window, float delta)
     glm::mat4 lightModel = glm::mat4(1.0f);
     glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(delta * 50.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     glm::vec4 newPos = rotation * glm::vec4(s_LightPos.x, s_LightPos.y, s_LightPos.z, 1.0);
-    s_LightPos = glm::vec3(newPos.x, newPos.y, newPos.z);
-    DrawCube(glm::vec3(0.0f, 0.0f, 0.0f));
+    // s_LightPos = glm::vec3(newPos.x, newPos.y, newPos.z);
+    for (int i = 0; i < 50; i++)
+    {
+        DrawCube(glm::vec3(0.0f + i, 0.0f + i, 0.0f + i));
+
+    }
+    // DrawCube(glm::vec3(0.0f, 0.0f, 0.0f));
     DrawLight();
 }
 
@@ -252,7 +278,7 @@ int main(int argc, char **argv)
         std::cerr << "EXCEPTION: " << e.what() << std::endl;
         return 1;
     }
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     uint64_t ticks = 0;
     int32_t fps = 0;
     uint64_t lastFrame = 0;
