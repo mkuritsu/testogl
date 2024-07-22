@@ -2,6 +2,7 @@
 #include <glad/glad.h>
 #include <fstream>
 #include <sstream>
+#include <iostream>
 
 GLShader::GLShader(ShaderType type, const std::string& source) : m_Type(type), m_Id(glCreateShader(type))
 {
@@ -15,9 +16,18 @@ GLShader::GLShader(ShaderType type, const std::filesystem::path& filePath) : m_T
     std::ifstream file(filePath);
     std::stringstream ss;
     ss << file.rdbuf();
-    const char* cString = ss.str().c_str();
+    std::string str = ss.str();
+    const char* cString = str.c_str();
     glShaderSource(m_Id, 1, &cString, NULL);
     glCompileShader(m_Id);
+    int32_t success;
+    glGetShaderiv(m_Id, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        char infoLog[1024];
+        glGetShaderInfoLog(m_Id, 1024, NULL, infoLog);
+        std::cout << "[GLSL] " << infoLog << std::endl;
+    }
 }
 
 GLShader::~GLShader()

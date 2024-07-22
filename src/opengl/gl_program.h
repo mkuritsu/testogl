@@ -2,6 +2,9 @@
 
 #include <cstdint>
 #include "gl_shader.h"
+#include <string>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 class GLProgram
 {
@@ -15,6 +18,10 @@ public:
     void Link() const;
 
     void Use() const;
+
+    void SetInt(const std::string& identifier, int32_t value) const;
+
+    void SetMatrix4(const std::string& identifier, const glm::mat4& mat4) const;
 
 private:
     uint32_t m_Id;

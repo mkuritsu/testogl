@@ -16,6 +16,7 @@ void Window::Init()
     }
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
     m_Window = SDL_CreateWindow(m_Title.c_str(), m_Width, m_Height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     if (m_Window == NULL)
     {
@@ -37,31 +38,23 @@ void Window::Init()
 void Window::PollEvents()
 {
     SDL_Event event;
-    m_DownKeys.clear();
     m_WheelMov.x = 0;
     m_WheelMov.y = 0;
     while (SDL_PollEvent(&event))
     {
-        if (event.type == SDL_EVENT_QUIT)
+        switch (event.type)
         {
+        case SDL_EVENT_QUIT:
             m_ShouldQuit = true;
             break;
-        }
-        else if (event.type == SDL_EVENT_KEY_DOWN)
-        {
-            m_DownKeys.insert(event.key.scancode);
-        }
-        else if (event.type == SDL_EVENT_MOUSE_WHEEL)
-        {
+        case SDL_EVENT_MOUSE_WHEEL:
             m_WheelMov.x = event.wheel.x;
             m_WheelMov.y = event.wheel.y;
+            break;
+        default:
+            break;
         }
     }
-    // if (m_DownKeys.size() > 0)
-    // {
-
-    //     std::cout << "PRESSED!" << std::endl;
-    // }
 }
 
 bool Window::ShouldQuit() const
@@ -102,9 +95,7 @@ int Window::GetHeight() const
 bool Window::IsKeyDown(SDL_Keycode key) const
 {
     const uint8_t* keys = SDL_GetKeyboardState(NULL);
-    // std::cout << keys << std::endl;
     return keys[key];
-    // return m_DownKeys.count(key) > 0;
 }
 
 MousePos Window::GetMouse() const
