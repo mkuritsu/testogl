@@ -82,7 +82,7 @@ static std::unique_ptr<GLBuffer> s_LightVBO;
 static std::unique_ptr<GLBuffer> s_LightEBO;
 
 const static glm::vec3 s_LightColor(1.0f, 1.0f, 1.0f);
-static glm::vec3 s_LightPos(8.0f, 0.0f, 0.0f);
+static glm::vec3 s_LightPos(4.0f, 0.0f, 0.0f);
 
 static void CreateCube()
 {
@@ -142,16 +142,22 @@ static void DrawCube(const glm::vec3& position)
     model = glm::translate(model, position);
     glm::mat4 view = camera.GetViewMatrix();
     glm::mat4 projection = glm::perspective(glm::radians(camera.GetFov()), 1280.0f / 720.0f, 0.1f, 100.0f);
-    glm::mat4 mvp = projection * view * model;
-    s_BasicShader->SetMatrix4("uTransform", mvp);
+    s_BasicShader->SetMatrix4("uModel", model);
+    s_BasicShader->SetMatrix4("uView", view);
+    s_BasicShader->SetMatrix4("uProjection", projection);
+    s_BasicShader->SetVec3("uLightColor", s_LightColor);
+    s_BasicShader->SetVec3("uLightPos", s_LightPos);
+    s_BasicShader->SetVec3("uViewPos", camera.GetPosition());
     glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
 }
 
-static void DrawLight(const glm::mat4 model)
+static void DrawLight()
 {
     s_LightVAO->Bind();
     s_LightShader->Use();
     s_LightShader->SetVec3("uLightColor", s_LightColor);
+    glm::mat4 model = glm::translate(glm::mat4(1.0f), s_LightPos);
+    model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
     glm::mat4 view = camera.GetViewMatrix();
     glm::mat4 projection = glm::perspective(glm::radians(camera.GetFov()), 1280.0f / 720.0f, 0.1f, 100.0f);
     glm::mat4 mvp = projection * view * model;
@@ -219,10 +225,10 @@ static void Draw(const Window& window, float delta)
 {
     DrawCube(glm::vec3(0.0f, 0.0f, 0.0f));
     glm::mat4 lightModel = glm::mat4(1.0f);
-    // lightModel = glm::rotate(lightModel, glm::radians(window.GetTime() * 50.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    lightModel = glm::scale(lightModel, glm::vec3(0.3f, 0.3f, 0.3f));
-    lightModel = glm::translate(lightModel, s_LightPos);
-    DrawLight(lightModel);
+    glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(delta * 50.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::vec4 newPos = rotation * glm::vec4(s_LightPos.x, s_LightPos.y, s_LightPos.z, 1.0);
+    s_LightPos = glm::vec3(newPos.x, newPos.y, newPos.z);
+    DrawLight();
     
 }
 
