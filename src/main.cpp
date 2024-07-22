@@ -138,8 +138,7 @@ static void DrawCube(const glm::vec3& position)
     s_BasicShader->Use();
     s_WallTexture->Bind(0);
     s_BasicShader->SetInt("uTexture0", 0);
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, position);
+    glm::mat4 model = glm::translate(glm::mat4(1.0f), position);
     glm::mat4 view = camera.GetViewMatrix();
     glm::mat4 projection = glm::perspective(glm::radians(camera.GetFov()), 1280.0f / 720.0f, 0.1f, 100.0f);
     s_BasicShader->SetMatrix4("uModel", model);
@@ -223,11 +222,11 @@ static void Update(Window& window, float delta)
 
 static void Draw(const Window& window, float delta)
 {
-    DrawCube(glm::vec3(0.0f, 0.0f, 0.0f));
     glm::mat4 lightModel = glm::mat4(1.0f);
     glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(delta * 50.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     glm::vec4 newPos = rotation * glm::vec4(s_LightPos.x, s_LightPos.y, s_LightPos.z, 1.0);
     s_LightPos = glm::vec3(newPos.x, newPos.y, newPos.z);
+    DrawCube(glm::vec3(0.0f, 0.0f, 0.0f));
     DrawLight();
     
 }
