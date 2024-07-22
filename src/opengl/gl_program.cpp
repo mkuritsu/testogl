@@ -55,3 +55,11 @@ void GLProgram::SetVec3(const std::string& identifier, const glm::vec3& vec3) co
     int32_t loc = glGetUniformLocation(m_Id, cString);
     glUniform3f(loc, vec3.x, vec3.y, vec3.z);
 }
+
+void GLProgram::SetFloat(const std::string& identifier, float value) const
+{
+    Use();
+    const char* cString = identifier.c_str();
+    int32_t loc = glGetUniformLocation(m_Id, cString);
+    glUniform1f(loc, value);
+}

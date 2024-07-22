@@ -25,6 +25,8 @@ public:
 
     void SetVec3(const std::string& identifier, const glm::vec3& vec3) const;
 
+    void SetFloat(const std::string& identifier, float value) const;
+
 private:
     uint32_t m_Id;
 };

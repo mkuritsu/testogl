@@ -10,6 +10,7 @@ add_subdirectory("thirdparty/sdl")
 add_subdirectory("thirdparty/glad")
 add_subdirectory("thirdparty/stb_image")
 add_subdirectory("thirdparty/glm")
+add_subdirectory("thirdparty/assimp")
 
 set(SOURCES 
     "src/main.cpp"
@@ -25,11 +26,19 @@ set(SOURCES
     "src/opengl/gl_debug.cpp"
 )
 
+set(INCLUDES
+    "thirdparty/sdl/include"
+    "thirdparty/glad/include"
+    "thirdparty/stb_image"
+    "thirdparty/glm"
+    "thirdparty/assimp/include"
+)
+
 add_executable(${CMAKE_PROJECT_NAME} ${SOURCES})
 
-target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE SDL3::SDL3 glad stb_image glm)
+target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE SDL3::SDL3 glad stb_image glm assimp)
 
-target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE "thirdparty/sdl/include" "thirdparty/glad/include" "thirdparty/stb_image" "thirdparty/glm")
+target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${INCLUDES})
 
 add_custom_target(copy_assets COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_LIST_DIR}/copy-assets.cmake)
 

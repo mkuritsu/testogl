@@ -74,15 +74,19 @@ static std::unique_ptr<GLProgram> s_BasicShader;
 static std::unique_ptr<GLVertexArray> s_CubeVAO;
 static std::unique_ptr<GLBuffer> s_CubeVBO;
 static std::unique_ptr<GLBuffer> s_CubeEBO;
-static std::unique_ptr<GLTexture> s_WallTexture;
+static std::unique_ptr<GLTexture> s_DiffuseTexture;
+static std::unique_ptr<GLTexture> s_SpecularTexture;
 
 static std::unique_ptr<GLProgram> s_LightShader;
 static std::unique_ptr<GLVertexArray> s_LightVAO;
 static std::unique_ptr<GLBuffer> s_LightVBO;
 static std::unique_ptr<GLBuffer> s_LightEBO;
 
-const static glm::vec3 s_LightColor(1.0f, 1.0f, 1.0f);
-static glm::vec3 s_LightPos(4.0f, 0.0f, 0.0f);
+static glm::vec3 s_LightPos = glm::vec3(3.0f, 0.0f, 0.0f);
+static glm::vec3 s_LightAmbient = glm::vec3(0.2f, 0.2f, 0.2f);
+static glm::vec3 s_LightDiffuse = glm::vec3(0.5f, 0.5f, 0.5f);
+static glm::vec3 s_LightSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
+static float s_Shininess = 64.0f;
 
 static void CreateCube()
 {
@@ -105,8 +109,8 @@ static void CreateCube()
     s_BasicShader->AttachShader(basicVS);
     s_BasicShader->AttachShader(basicFS);
     s_BasicShader->Link();
-    s_WallTexture = std::make_unique<GLTexture>("assets/wall.jpg");
-    s_WallTexture->Bind();
+    s_DiffuseTexture = std::make_unique<GLTexture>("assets/container2.png");
+    s_SpecularTexture = std::make_unique<GLTexture>("assets/container2_specular.png");
 }
 
 static void CreateLightCube()
@@ -136,7 +140,8 @@ static void DrawCube(const glm::vec3& position)
 {
     s_CubeVAO->Bind();
     s_BasicShader->Use();
-    s_WallTexture->Bind(0);
+    s_DiffuseTexture->Bind(0);
+    s_SpecularTexture->Bind(1);
     s_BasicShader->SetInt("uTexture0", 0);
     glm::mat4 model = glm::translate(glm::mat4(1.0f), position);
     glm::mat4 view = camera.GetViewMatrix();
@@ -144,9 +149,14 @@ static void DrawCube(const glm::vec3& position)
     s_BasicShader->SetMatrix4("uModel", model);
     s_BasicShader->SetMatrix4("uView", view);
     s_BasicShader->SetMatrix4("uProjection", projection);
-    s_BasicShader->SetVec3("uLightColor", s_LightColor);
-    s_BasicShader->SetVec3("uLightPos", s_LightPos);
     s_BasicShader->SetVec3("uViewPos", camera.GetPosition());
+    s_BasicShader->SetVec3("uLight.position", s_LightPos);
+    s_BasicShader->SetVec3("uLight.ambient", s_LightAmbient);
+    s_BasicShader->SetVec3("uLight.diffuse", s_LightDiffuse);
+    s_BasicShader->SetVec3("uLight.specular", s_LightSpecular);
+    s_BasicShader->SetInt("uMaterial.diffuse", 0);
+    s_BasicShader->SetInt("uMaterial.specular", 1);
+    s_BasicShader->SetFloat("uMaterial.shininess", s_Shininess);
     glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
 }
 
@@ -154,7 +164,7 @@ static void DrawLight()
 {
     s_LightVAO->Bind();
     s_LightShader->Use();
-    s_LightShader->SetVec3("uLightColor", s_LightColor);
+    s_LightShader->SetVec3("uLightColor", s_LightSpecular);
     glm::mat4 model = glm::translate(glm::mat4(1.0f), s_LightPos);
     model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
     glm::mat4 view = camera.GetViewMatrix();
@@ -228,7 +238,6 @@ static void Draw(const Window& window, float delta)
     s_LightPos = glm::vec3(newPos.x, newPos.y, newPos.z);
     DrawCube(glm::vec3(0.0f, 0.0f, 0.0f));
     DrawLight();
-    
 }
 
 int main(int argc, char **argv)
