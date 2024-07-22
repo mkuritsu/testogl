@@ -23,6 +23,8 @@ public:
 
     void SetMatrix4(const std::string& identifier, const glm::mat4& mat4) const;
 
+    void SetVec3(const std::string& identifier, const glm::vec3& vec3) const;
+
 private:
     uint32_t m_Id;
 };

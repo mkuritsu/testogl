@@ -76,7 +76,88 @@ static std::unique_ptr<GLBuffer> s_CubeVBO;
 static std::unique_ptr<GLBuffer> s_CubeEBO;
 static std::unique_ptr<GLTexture> s_WallTexture;
 
+static std::unique_ptr<GLProgram> s_LightShader;
+static std::unique_ptr<GLVertexArray> s_LightVAO;
+static std::unique_ptr<GLBuffer> s_LightVBO;
+static std::unique_ptr<GLBuffer> s_LightEBO;
 
+const static glm::vec3 s_LightColor(1.0f, 1.0f, 1.0f);
+static glm::vec3 s_LightPos(8.0f, 0.0f, 0.0f);
+
+static void CreateCube()
+{
+    s_CubeVAO = std::make_unique<GLVertexArray>();
+    s_CubeVAO->Bind();
+    s_CubeVBO = std::make_unique<GLBuffer>(BufferType::VERTEX_BUFFER);
+    s_CubeVBO->Bind();
+    s_CubeVBO->SetData(vertices, sizeof(vertices));
+    VertexLayout layout;
+    layout.PushElement<float>(3);
+    layout.PushElement<float>(2);
+    layout.PushElement<float>(3);
+    s_CubeVAO->SetLayout(layout);
+    s_CubeEBO = std::make_unique<GLBuffer>(BufferType::ELEMENT_BUFFER);
+    s_CubeEBO->Bind();
+    s_CubeEBO->SetData(indices, sizeof(indices));
+    s_BasicShader = std::make_unique<GLProgram>();
+    GLShader basicVS(ShaderType::VERTEX_SHADER, std::filesystem::path("assets/basic.vert"));
+    GLShader basicFS(ShaderType::FRAGMENT_SHADER, std::filesystem::path("assets/basic.frag"));
+    s_BasicShader->AttachShader(basicVS);
+    s_BasicShader->AttachShader(basicFS);
+    s_BasicShader->Link();
+    s_WallTexture = std::make_unique<GLTexture>("assets/wall.jpg");
+    s_WallTexture->Bind();
+}
+
+static void CreateLightCube()
+{
+    s_LightVAO = std::make_unique<GLVertexArray>();
+    s_LightVAO->Bind();
+    s_LightVBO = std::make_unique<GLBuffer>(BufferType::VERTEX_BUFFER);
+    s_LightVBO->Bind();
+    s_LightVBO->SetData(vertices, sizeof(vertices));
+    VertexLayout layout;
+    layout.PushElement<float>(3);
+    layout.PushElement<float>(2);
+    layout.PushElement<float>(3);
+    s_LightVAO->SetLayout(layout);
+    s_LightEBO = std::make_unique<GLBuffer>(BufferType::ELEMENT_BUFFER);
+    s_LightEBO->Bind();
+    s_LightEBO->SetData(indices, sizeof(indices));
+    s_LightShader = std::make_unique<GLProgram>();
+    GLShader lightVS(ShaderType::VERTEX_SHADER, std::filesystem::path("assets/light_cube.vert"));
+    GLShader lightFS(ShaderType::FRAGMENT_SHADER, std::filesystem::path("assets/light_cube.frag"));
+    s_LightShader->AttachShader(lightVS);
+    s_LightShader->AttachShader(lightFS);
+    s_LightShader->Link();
+}
+
+static void DrawCube(const glm::vec3& position)
+{
+    s_CubeVAO->Bind();
+    s_BasicShader->Use();
+    s_WallTexture->Bind(0);
+    s_BasicShader->SetInt("uTexture0", 0);
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, position);
+    glm::mat4 view = camera.GetViewMatrix();
+    glm::mat4 projection = glm::perspective(glm::radians(camera.GetFov()), 1280.0f / 720.0f, 0.1f, 100.0f);
+    glm::mat4 mvp = projection * view * model;
+    s_BasicShader->SetMatrix4("uTransform", mvp);
+    glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+}
+
+static void DrawLight(const glm::mat4 model)
+{
+    s_LightVAO->Bind();
+    s_LightShader->Use();
+    s_LightShader->SetVec3("uLightColor", s_LightColor);
+    glm::mat4 view = camera.GetViewMatrix();
+    glm::mat4 projection = glm::perspective(glm::radians(camera.GetFov()), 1280.0f / 720.0f, 0.1f, 100.0f);
+    glm::mat4 mvp = projection * view * model;
+    s_LightShader->SetMatrix4("uTransform", mvp);
+    glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+}
 
 static void Init(const Window& window)
 {
@@ -85,38 +166,10 @@ static void Init(const Window& window)
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     glDebugMessageCallback(glDebugOutput, nullptr);
-
-    s_CubeVAO = std::make_unique<GLVertexArray>();
-    s_CubeVAO->Bind();
-
-    s_CubeVBO = std::make_unique<GLBuffer>(BufferType::VERTEX_BUFFER);
-    s_CubeVBO->Bind();
-    s_CubeVBO->SetData(vertices, sizeof(vertices));
-
-    VertexLayout layout;
-    layout.PushElement<float>(3);
-    layout.PushElement<float>(2);
-    layout.PushElement<float>(3);
-    s_CubeVAO->SetLayout(layout);
-
-    s_CubeEBO = std::make_unique<GLBuffer>(BufferType::ELEMENT_BUFFER);
-    s_CubeEBO->Bind();
-    s_CubeEBO->SetData(indices, sizeof(indices));
-
-    s_BasicShader = std::make_unique<GLProgram>();
-    GLShader basicVS(ShaderType::VERTEX_SHADER, std::filesystem::path("assets/basic.vert"));
-    GLShader basicFS(ShaderType::FRAGMENT_SHADER, std::filesystem::path("assets/basic.frag"));
-    s_BasicShader->AttachShader(basicVS);
-    s_BasicShader->AttachShader(basicFS);
-    s_BasicShader->Link();
-
-    s_BasicShader->SetInt("uTexture0", 0);
-
-    s_WallTexture = std::make_unique<GLTexture>("assets/wall.jpg");
-    s_WallTexture->Bind();
-
     window.CaptureCursor();
     camera.Move(glm::vec3(0.0f, 0.0f, 3.0f));
+    CreateCube();
+    CreateLightCube();
 }
 
 static void Update(Window& window, float delta)
@@ -162,19 +215,15 @@ static void Update(Window& window, float delta)
     camera.SetFov(camera.GetFov() - wheel.y);
 }
 
-static void Draw(float delta)
+static void Draw(const Window& window, float delta)
 {
-    s_BasicShader->Use();
-    s_CubeVAO->Bind();
-    s_WallTexture->Bind();
-
-    glm::mat4 model = glm::mat4(1.0f);
-    glm::mat4 view = camera.GetViewMatrix();
-    glm::mat4 projection = glm::perspective(glm::radians(camera.GetFov()), 1280.0f / 720.0f, 0.1f, 100.0f);
-
-    glm::mat4 mvp = projection * view * model;
-    s_BasicShader->SetMatrix4("uTransform", mvp);
-    glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
+    DrawCube(glm::vec3(0.0f, 0.0f, 0.0f));
+    glm::mat4 lightModel = glm::mat4(1.0f);
+    // lightModel = glm::rotate(lightModel, glm::radians(window.GetTime() * 50.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    lightModel = glm::scale(lightModel, glm::vec3(0.3f, 0.3f, 0.3f));
+    lightModel = glm::translate(lightModel, s_LightPos);
+    DrawLight(lightModel);
+    
 }
 
 int main(int argc, char **argv)
@@ -213,7 +262,7 @@ int main(int argc, char **argv)
         int height = window.GetHeight();
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        Draw(delta);
+        Draw(window, delta);
         window.SwapBuffers();
     }
     window.Destroy();

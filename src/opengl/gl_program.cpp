@@ -47,3 +47,11 @@ void GLProgram::SetMatrix4(const std::string& identifier, const glm::mat4& mat4)
     int32_t loc = glGetUniformLocation(m_Id, cString);
     glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(mat4));
 }
+
+void GLProgram::SetVec3(const std::string& identifier, const glm::vec3& vec3) const
+{
+    Use();
+    const char* cString = identifier.c_str();
+    int32_t loc = glGetUniformLocation(m_Id, cString);
+    glUniform3f(loc, vec3.x, vec3.y, vec3.z);
+}
