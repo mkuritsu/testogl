@@ -11,13 +11,6 @@ public:
     template<typename T>
     void PushElement(uint32_t count);
 
-    template<>
-    void PushElement<float>(uint32_t count)
-    {
-        m_Elements.emplace_back(FLOAT, count, sizeof(float));
-        m_Stride += count * sizeof(float);
-    }
-
     uint32_t GetStride() const;
 
     const std::vector<LayoutElement>& GetElements() const;
